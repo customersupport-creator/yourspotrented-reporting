@@ -105,6 +105,30 @@ export function generateReport(rows, config, meta = {}) {
   const metrics = buildMetrics(sections);
   const summary = summaryProvider.generate(metrics, config);
 
+  // --- Refund diagnostics / logging ---------------------------------------
+  // Surface refund-ingestion problems early (the refund-grid export uses generic
+  // column names, so a mapping slip silently drops the data).
+  const refundSourceRows = rows.filter((r) => r._refundSource).length;
+  const refundWarnings = [];
+  if (refundSourceRows > 0) {
+    const r = sections.refunds;
+    console.log(
+      `[refunds] source rows=${refundSourceRows} | issued=${r.issued} ` +
+        `processed=${r.processed.count} pending=${r.pending.count} ` +
+        `unclassified=${r.unclassified} total=${r.total}`
+    );
+    if (r.issued === 0) {
+      refundWarnings.push('A refund/reimbursement sheet was uploaded but no refund records were read — check the file format.');
+    } else if (r.processed.count + r.pending.count === 0) {
+      refundWarnings.push(
+        `${refundSourceRows} refund records were detected but none matched a PAID/PENDING status — check the STATUS column mapping.`
+      );
+    } else if (r.unclassified > 0) {
+      refundWarnings.push(`${r.unclassified} refund record(s) had an unrecognized STATUS and were counted as issued only.`);
+    }
+  }
+  const mergedWarnings = [...(meta.warnings || []), ...refundWarnings];
+
   // Itemize per source file so each upload can be audited against the combined
   // totals. Always an array (length 1 for a single upload).
   const perFileReports = generatePerFileBreakdown(rows, config);
@@ -115,6 +139,7 @@ export function generateReport(rows, config, meta = {}) {
       period: derivePeriod(rows),
       currency: config.currency || 'PHP',
       ...meta,
+      warnings: mergedWarnings,
     },
     sections,
     charts,

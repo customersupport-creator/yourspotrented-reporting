@@ -15,7 +15,10 @@ const SYNONYMS = {
   towingStatus: ['towing status', 'tow status', 'towing', 'towstatus', 'towed'],
   towingCompany: ['towing company', 'towingcompany', 'tow company', 'towco'],
   licensePlate: ['license plate', 'licenseplate', 'plate number', 'platenumber', 'plate no', 'plateno', 'plate'],
-  refundStatus: ['refund status', 'refund', 'refundstatus', 'reimbursement'],
+  // "status" maps a refund sheet's STATUS column (PAID/PENDING). Bare "refund"
+  // is intentionally NOT a synonym — it wrongly grabbed "REFUND METHOD".
+  refundStatus: ['refund status', 'refundstatus', 'reimbursement', 'status'],
+  endorsedBy: ['endorsed by', 'endorsedby'],
   expenseCategory: ['expense category', 'expensecategory', 'expensetype', 'category'],
   expensePurpose: ['purpose'],
   csReasonCategory: ['reason for contact category', 'reason for contact', 'reasonforcontact'],

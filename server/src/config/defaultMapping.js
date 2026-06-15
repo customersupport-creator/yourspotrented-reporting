@@ -37,6 +37,9 @@ export const defaultConfig = {
     towingCompany: 'TOWING COMPANY',
     licensePlate: 'LICENSE PLATE',
     refundStatus: 'Refund Status',
+    // Refund/Reimbursement sheet marker (e.g. refund-grid view export). The
+    // refund metrics are sourced exclusively from files that have this column.
+    endorsedBy: 'ENDORSED BY',
     expenseCategory: 'Expense Category',
     // Management Expenses sheet marker. That sheet is the SOLE source for the
     // Expenses metric (identified by its distinctive "PURPOSE" column), so
@@ -71,7 +74,9 @@ export const defaultConfig = {
     towed: ['towed', 'tow'],
     paid: ['paid', 'settled'],
     encoded: ['encoded', 'recorded', 'logged'],
-    refundProcessed: ['approved-processed', 'processed', 'completed'],
+    // Refund sheets record the refund's payout state as "PAID" (processed) or
+    // "PENDING"; keep the older Approved-* values too.
+    refundProcessed: ['approved-processed', 'processed', 'completed', 'paid'],
     refundPending: ['approved-pending', 'pending'],
     csIndicators: ['inquiry', 'complaint', 'request', 'yes', 'true'],
   },

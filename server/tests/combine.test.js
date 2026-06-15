@@ -153,6 +153,27 @@ describe('POST /api/reports/generate with multiple files', () => {
     expect(cats).not.toContain('REFUND');
   });
 
+  it('counts refunds from a refund-grid sheet (STATUS not REFUND METHOD)', async () => {
+    // Real refund-grid column shape, incl. the decoy "REFUND METHOD" column that
+    // previously stole the refund-status mapping.
+    const refunds = [
+      'DATE,AMOUNT,PAYMENT DETAILS,REFUND METHOD,REASON CATEGORY,STATUS,CATEGORY,ENDORSED BY',
+      '6/1/2026,11.99,note,ZELLE,Lot full,PAID,REFUND,Ana',
+      '6/2/2026,21.00,note,ZELLE,Lot full,PAID,REFUND,Ben',
+      '6/3/2026,17.00,note,ZELLE,Lot full,PENDING,REIMBURSEMENT,',
+    ].join('\n');
+    const res = await request(app)
+      .post('/api/reports/generate')
+      .attach('files', buf(refunds), 'refund-Grid view.csv');
+
+    expect(res.status).toBe(200);
+    const r = res.body.sections.refunds;
+    expect(r.sourced).toBe(true);
+    expect(r.issued).toBe(3); // all refund records included
+    expect(r.processed).toEqual({ count: 2, total: 32.99 }); // PAID x2
+    expect(r.pending).toEqual({ count: 1, total: 17 }); // PENDING
+  });
+
   it('itemizes a per-file breakdown (CS omitted) alongside combined totals', async () => {
     const res = await request(app)
       .post('/api/reports/generate')

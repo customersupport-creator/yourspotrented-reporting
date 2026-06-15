@@ -95,6 +95,7 @@ export function combineFiles(files, config) {
     const isManagementExpense = Boolean(effectiveMap.expensePurpose);
     const isCustomerTracking = Boolean(effectiveMap.csReasonCategory);
     const isRevenue = Boolean(effectiveMap.totalNetRemit || effectiveMap.netTransient);
+    const isRefund = Boolean(effectiveMap.endorsedBy);
     normRows.forEach((r) => {
       r._source = f.name;
       r._towLogSource = isTowLog;
@@ -102,6 +103,7 @@ export function combineFiles(files, config) {
       r._expenseSource = isManagementExpense;
       r._csSource = isCustomerTracking;
       r._revenueSource = isRevenue;
+      r._refundSource = isRefund;
     });
     combined.push(...normRows);
 
