@@ -72,6 +72,32 @@ git add -A && git commit -m "your change" && git push
 
 ---
 
+## Shareable report links (the "Share Link" button)
+
+After generating a report, click **🔗 Share Link** in the header. The tool saves
+the report and gives you a public URL like:
+
+```
+https://yourspotrented-reporting.onrender.com/r/AbC123xyz
+```
+
+Anyone with that link sees the report **read-only** (no upload/editing) and can
+export it to PDF/Excel. This is the "click → get a live URL to share to any
+network" flow — it works once the app is deployed (the link is only public if the
+app is public).
+
+**Durability of links:** published reports are stored on the server's filesystem
+(`server/.data/reports`). On Render's **free** tier the filesystem is *ephemeral*
+— it resets on every redeploy and when a sleeping instance is replaced — so share
+links there are **not permanent**. To make links durable, either:
+
+- attach a **Render Disk** (paid) and set `DATA_DIR` to a path on it, e.g.
+  `DATA_DIR=/var/data/reports`; or
+- back the store with a database (swap `server/src/services/reportStore.js`; the
+  `saveReport`/`getReport` interface stays the same).
+
+Ask and I'll wire up a database-backed store for permanent links.
+
 ## Notes & options
 
 - **Free tier sleeps.** First visit after idle takes ~30–60s to wake. Upgrade to

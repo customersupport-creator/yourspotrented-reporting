@@ -36,3 +36,17 @@ export function generateReport(files, config) {
   if (config) form.append('config', JSON.stringify(config));
   return fetch('/api/reports/generate', { method: 'POST', body: form }).then(handle);
 }
+
+/** Publish the current report and get a share id. */
+export function publishReport(report, remit) {
+  return fetch('/api/reports/publish', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ report, remit }),
+  }).then(handle);
+}
+
+/** Fetch a previously published (shared) report by id. */
+export function getSharedReport(id) {
+  return fetch(`/api/reports/shared/${encodeURIComponent(id)}`).then(handle);
+}

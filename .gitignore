@@ -25,3 +25,7 @@ coverage/
 
 # local pre-redesign UI backups (not needed in the repo)
 backups/
+
+# published/shared report storage (runtime data)
+.data/
+server/.data/

@@ -9,8 +9,18 @@ import ExportButtons from './components/ExportButtons.jsx';
 import KpiCards from './components/dashboard/KpiCards.jsx';
 import Charts from './components/dashboard/Charts.jsx';
 import ExecutiveDashboard from './components/executive/ExecutiveDashboard.jsx';
+import ShareButton from './components/ShareButton.jsx';
+import SharedReport from './components/SharedReport.jsx';
 
 export default function App() {
+  // Public shared-report route: /r/<id> renders the saved report read-only.
+  const sharedId = window.location.pathname.match(/^\/r\/([\w-]+)\/?$/)?.[1];
+  if (sharedId) return <SharedReport id={sharedId} />;
+
+  return <Workspace />;
+}
+
+function Workspace() {
   const { status, error, errorDetails, files, preview, config, setConfig, report, remit, setRemit, addFiles, removeFile, generate, reset } =
     useReport();
   const missingFields = errorDetails?.missingFields || [];
@@ -48,6 +58,7 @@ export default function App() {
                 </button>
               </div>
             )}
+            {report && <ShareButton report={report} remit={remit} />}
             {report && <ExportButtons report={report} remit={remit} />}
           </div>
         </div>

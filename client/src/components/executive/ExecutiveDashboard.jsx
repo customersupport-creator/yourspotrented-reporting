@@ -50,7 +50,7 @@ function prettyDate(iso) {
   return d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 }
 
-export default function ExecutiveDashboard({ report, remit, onRemitChange }) {
+export default function ExecutiveDashboard({ report, remit, onRemitChange, shared }) {
   if (!report) return null;
   const { sections: s, charts, meta, summary } = report;
   const currency = meta.currency || 'PHP';
@@ -226,9 +226,11 @@ export default function ExecutiveDashboard({ report, remit, onRemitChange }) {
               </Panel>
             </div>
 
-            <Panel title="Weekly Total Net Remit (manual entry)">
-              <RemitEntry currency={currency} csvComputedTotal={s.netRemit.total} onChange={onRemitChange} />
-            </Panel>
+            {!shared && (
+              <Panel title="Weekly Total Net Remit (manual entry)">
+                <RemitEntry currency={currency} csvComputedTotal={s.netRemit.total} onChange={onRemitChange} />
+              </Panel>
+            )}
 
             <Commentary>
               Net remittance reached {c(netRemit)} this week. {n(s.refunds.processed.count)} refunds were processed
