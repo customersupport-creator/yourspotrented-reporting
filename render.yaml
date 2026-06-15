@@ -1,0 +1,26 @@
+# Render Blueprint — one web service that builds the React client and serves it
+# together with the Express API from a single Node process.
+#
+# Deploy: push this repo to GitHub, then on Render: New > Blueprint > pick the
+# repo. Render reads this file and provisions everything. See DEPLOY.md.
+
+services:
+  - type: web
+    name: yourspotrented-reporting
+    runtime: node
+    plan: free
+    # --include=dev forces Vite/Tailwind (devDependencies) to install even though
+    # NODE_ENV=production, so the client build succeeds; then build the client.
+    buildCommand: npm install --include=dev && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: 20.18.1
+      - key: MAX_UPLOAD_MB
+        value: "5"
+      - key: PERSIST
+        value: "false"

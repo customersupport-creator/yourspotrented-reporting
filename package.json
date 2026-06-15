@@ -1,0 +1,24 @@
+{
+  "name": "yourspotrented-reporting-tool",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Web-based weekly reporting tool for parking-enforcement operations (CSV -> report, dashboard, AI summary, PDF/Excel export).",
+  "workspaces": [
+    "server",
+    "client"
+  ],
+  "scripts": {
+    "dev": "concurrently -n server,client -c blue,green \"npm:dev:server\" \"npm:dev:client\"",
+    "dev:server": "npm run dev --workspace server",
+    "dev:client": "npm run dev --workspace client",
+    "build": "npm run build --workspace client",
+    "start": "npm run start --workspace server",
+    "test": "npm run test --workspace server"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

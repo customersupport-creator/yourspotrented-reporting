@@ -1,0 +1,28 @@
+{
+  "name": "@yourspotrented/server",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Express backend: CSV parsing, configurable mapping, modular reporting engine, template AI summary.",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "node --watch src/index.js",
+    "start": "node src/index.js",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2",
+    "multer": "^1.4.5-lts.1",
+    "papaparse": "^5.4.1"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "supertest": "^7.0.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "transform": {}
+  }
+}

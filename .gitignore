@@ -1,0 +1,27 @@
+# dependencies
+node_modules/
+**/node_modules/
+
+# build output
+client/dist/
+client/.vite/
+
+# env
+.env
+**/.env
+!**/.env.example
+
+# logs
+*.log
+npm-debug.log*
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+
+# test / coverage
+coverage/
+
+# local pre-redesign UI backups (not needed in the repo)
+backups/

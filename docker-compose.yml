@@ -1,0 +1,33 @@
+# Optional containerized run. v1 is stateless, so only the `app` service is
+# required. The `db` service is provided (commented) for when persistence is
+# enabled (PERSIST=true + server/db/schema.sql).
+
+services:
+  app:
+    build: .
+    ports:
+      - "4000:4000"
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      MAX_UPLOAD_MB: 5
+      PERSIST: "false"
+      # DATABASE_URL: postgres://postgres:postgres@db:5432/yourspotrented
+    # depends_on:
+    #   - db
+
+  # Uncomment to enable Postgres persistence:
+  # db:
+  #   image: postgres:16-alpine
+  #   environment:
+  #     POSTGRES_USER: postgres
+  #     POSTGRES_PASSWORD: postgres
+  #     POSTGRES_DB: yourspotrented
+  #   ports:
+  #     - "5432:5432"
+  #   volumes:
+  #     - pgdata:/var/lib/postgresql/data
+  #     - ./server/db/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+
+# volumes:
+#   pgdata:

@@ -1,0 +1,34 @@
+Date,Violation Status,Payment Status,Towing Status,Refund Status,Customer Service,Expense Category,Amount,Net Remit,Refund Amount,Expense Amount,Notes
+2026-06-01,Encoded,Paid,Towed,,,,1500,1350,,,No parking zone - towed and settled
+2026-06-01,Encoded,Paid,Towed,,,,1500,1350,,,Fire lane obstruction
+2026-06-01,Encoded,Unpaid,,,Inquiry,,1500,0,,,Driver called asking about fees
+2026-06-01,Encoded,Paid,,,,,800,720,,,Expired meter
+2026-06-02,Encoded,Paid,Towed,,,,1500,1350,,,Loading bay violation
+2026-06-02,Encoded,Paid,Towed,Approved-Processed,,,1500,1350,500,,Overcharge refunded
+2026-06-02,Encoded,Unpaid,,Approved-Pending,Complaint,,1500,0,750,,Disputed towing fee
+2026-06-02,Encoded,Paid,,,,,800,720,,,Double parking
+2026-06-02,,,,,Request,,,,,,Towing schedule request via hotline
+2026-06-03,Encoded,Paid,Towed,,,,1500,1350,,,Sidewalk obstruction
+2026-06-03,Encoded,Paid,Towed,,,,1500,1350,,,Yellow lane violation
+2026-06-03,Encoded,Settled,,,,,800,720,,,Meter expired - paid online
+2026-06-03,Encoded,Unpaid,,Approved-Pending,Inquiry,,1500,0,500,,Refund requested pending review
+2026-06-03,,,,,,Fuel,,,,1200,Tow truck diesel refill
+2026-06-04,Encoded,Paid,Towed,,,,1500,1350,,,Private driveway block
+2026-06-04,Encoded,Paid,Towed,Approved-Processed,,,1500,1350,500,,Wrongful tow refunded
+2026-06-04,Encoded,Paid,,,,,800,720,,,No parking sign violation
+2026-06-04,Encoded,Unpaid,,,Complaint,,1500,0,,,Customer disputes violation photo
+2026-06-04,,,,,,Supplies,,,,650,Wheel clamps and chalk
+2026-06-05,Encoded,Paid,Towed,,,,1500,1350,,,Bus stop obstruction
+2026-06-05,Encoded,Paid,Towed,,,,1500,1350,,,Hydrant blocking
+2026-06-05,Encoded,Settled,,,,,800,720,,,Expired permit
+2026-06-05,Encoded,Unpaid,,Approved-Processed,,,1500,0,750,,Refund processed for duplicate charge
+2026-06-05,,,,,Inquiry,,,,,,Where to claim towed vehicle
+2026-06-05,,,,,,Salaries,,,,8000,Weekly enforcer wages
+2026-06-06,Encoded,Paid,Towed,,,,1500,1350,,,Crosswalk obstruction
+2026-06-06,Encoded,Paid,,,,,800,720,,,Meter violation paid on site
+2026-06-06,Encoded,Unpaid,,Approved-Pending,Complaint,,1500,0,500,,Pending refund - overpayment
+2026-06-06,,,,,,Maintenance,,,,2200,Tow truck brake servicing
+2026-06-07,Encoded,Paid,Towed,,,,1500,1350,,,Illegal parking on highway
+2026-06-07,Encoded,Settled,,,,,800,720,,,Final settlement of week
+2026-06-07,,,,,Request,,,,,,Request for violation records copy
+2026-06-07,,,,,,Fuel,,,,1100,End of week fuel top-up
