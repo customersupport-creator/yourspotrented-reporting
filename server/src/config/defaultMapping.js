@@ -40,6 +40,8 @@ export const defaultConfig = {
     // Refund/Reimbursement sheet marker (e.g. refund-grid view export). The
     // refund metrics are sourced exclusively from files that have this column.
     endorsedBy: 'ENDORSED BY',
+    refundCategory: 'CATEGORY',
+    refundReason: 'REASON CATEGORY',
     expenseCategory: 'Expense Category',
     // Management Expenses sheet marker. That sheet is the SOLE source for the
     // Expenses metric (identified by its distinctive "PURPOSE" column), so
@@ -103,7 +105,7 @@ export const defaultConfig = {
   // every other field is optional and degrades gracefully when absent.
   requiredFields: ['date'],
 
-  currency: 'PHP',
+  currency: 'USD',
   dateGrouping: 'day', // 'day' | 'week'
 };
 

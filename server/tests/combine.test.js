@@ -115,6 +115,8 @@ describe('POST /api/reports/generate with multiple files', () => {
     expect(res.status).toBe(200);
     expect(res.body.sections.highlights.encoded).toBe(4); // every notice
     expect(res.body.sections.highlights.paid).toBe(1); // only the Parkpliant Paid one (not the 2 in payments)
+    expect(res.body.sections.enforcement.parkpliantRecords).toHaveLength(4); // detail records
+    expect(res.body.sections.enforcement.parkpliantRecords[0]).toMatchObject({ notice: 'T-1', status: 'Paid' });
   });
 
   it('counts Customer Service as every record in the Customer Tracking sheet', async () => {
@@ -172,6 +174,8 @@ describe('POST /api/reports/generate with multiple files', () => {
     expect(r.issued).toBe(3); // all refund records included
     expect(r.processed).toEqual({ count: 2, total: 32.99 }); // PAID x2
     expect(r.pending).toEqual({ count: 1, total: 17 }); // PENDING
+    expect(r.transactions).toHaveLength(2); // detail list = processed transactions
+    expect(r.transactions[0]).toMatchObject({ amount: 11.99, status: 'PAID', category: 'REFUND' });
   });
 
   it('itemizes a per-file breakdown (CS omitted) alongside combined totals', async () => {

@@ -53,6 +53,34 @@ export function Section({ index, title, children }) {
   );
 }
 
+/**
+ * Collapsible card (collapsed by default) for detail tables. Built on the native
+ * <details> element so the PDF export can force it open before capture without
+ * fighting React state. An optional `headline` shows even while collapsed.
+ */
+export function CollapsiblePanel({ title, metricLabel, metric, metricTone = 'emerald', sub, children, defaultOpen = false }) {
+  return (
+    <details data-pdf-block open={defaultOpen} className="group rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-4">
+        <div>
+          <h3 className="text-base font-bold text-slate-800">{title}</h3>
+          {metric != null && (
+            <div className="mt-1">
+              {metricLabel && (
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{metricLabel}</p>
+              )}
+              <p className={`text-2xl font-extrabold ${TONE[metricTone] || TONE.emerald}`}>{metric}</p>
+            </div>
+          )}
+          {sub && <p className="mt-1 text-sm text-slate-400">{sub}</p>}
+        </div>
+        <span className="select-none text-slate-400 transition-transform group-open:rotate-180">▼</span>
+      </summary>
+      <div className="border-t border-slate-100 px-5 py-4">{children}</div>
+    </details>
+  );
+}
+
 /** White card wrapper for charts/tables with a bold title. */
 export function Panel({ title, children, empty }) {
   return (

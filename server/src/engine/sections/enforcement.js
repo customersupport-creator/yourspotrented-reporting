@@ -1,9 +1,11 @@
+import { round2 } from '../../utils/num.js';
+
 /**
  * OPERATIONS & ENFORCEMENT (detail)
  *
- * Provides the Tow Activity Log (one row per towed vehicle) for the executive
- * Operations section. Tow records come exclusively from a tow-log source (a file
- * with a TOWING COMPANY column); each row with a license plate is one tow.
+ * Provides detail lists for the executive Operations section:
+ *  - towLog: one row per towed vehicle (tow-log source).
+ *  - parkpliantRecords: one row per encoded violation (Parkpliant source).
  */
 export default {
   key: 'enforcement',
@@ -18,6 +20,16 @@ export default {
         company: String(r.towingCompany || '').trim(),
       }));
 
-    return { towLog };
+    const parkpliantRecords = rows
+      .filter((r) => r._parkpliantSource && String(r.violationNotice || '').trim() !== '')
+      .map((r) => ({
+        notice: String(r.violationNotice || '').trim(),
+        date: String(r.date || '').trim(),
+        amount: round2(Number(r.violationAmount) || 0),
+        status: String(r.violationStatus || '').trim(),
+        facility: String(r.facility || '').trim(),
+      }));
+
+    return { towLog, parkpliantRecords };
   },
 };

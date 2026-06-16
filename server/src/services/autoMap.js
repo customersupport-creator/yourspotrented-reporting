@@ -19,6 +19,8 @@ const SYNONYMS = {
   // is intentionally NOT a synonym — it wrongly grabbed "REFUND METHOD".
   refundStatus: ['refund status', 'refundstatus', 'reimbursement', 'status'],
   endorsedBy: ['endorsed by', 'endorsedby'],
+  refundCategory: ['category'],
+  refundReason: ['reason category', 'reasoncategory'],
   expenseCategory: ['expense category', 'expensecategory', 'expensetype', 'category'],
   expensePurpose: ['purpose'],
   csReasonCategory: ['reason for contact category', 'reason for contact', 'reasonforcontact'],

@@ -20,9 +20,9 @@ describe('TemplateSummaryProvider', () => {
     expect(text).toContain('158 violations were encoded into Parkpliant');
     expect(text).toContain('97 successfully paid');
     expect(text).toContain('Customer service handled 34 inquiries');
-    expect(text).toContain('Net remittance reached PHP 185,000');
+    expect(text).toContain('Net remittance reached $185,000');
     expect(text).toContain('3 refunds were approved and processed while 2 remain pending');
-    expect(text).toContain('Total operating expenses amounted to PHP 25,000');
+    expect(text).toContain('Total operating expenses amounted to $25,000');
   });
 
   it('omits zero-value clauses and pluralizes correctly', () => {

@@ -15,7 +15,7 @@ import {
 } from 'recharts';
 import { formatCurrency, formatCount } from '../../utils/format.js';
 import RemitEntry from '../RemitEntry.jsx';
-import { KpiCard, KpiGrid, Section, Panel, SummaryCard, Commentary, InsightCard } from './ExecPrimitives.jsx';
+import { KpiCard, KpiGrid, Section, Panel, CollapsiblePanel, SummaryCard, Commentary, InsightCard } from './ExecPrimitives.jsx';
 
 /**
  * Weekly Operations Executive Dashboard — a presentation-only re-skin of the
@@ -75,6 +75,8 @@ export default function ExecutiveDashboard({ report, remit, onRemitChange, share
   const refundsTotalCount = s.refunds.processed.count + s.refunds.pending.count;
   const a = s.serviceAnalytics; // null when no Customer Tracking sheet uploaded
   const towLog = s.enforcement?.towLog || [];
+  const parkRecords = s.enforcement?.parkpliantRecords || [];
+  const refundTx = s.refunds.transactions || [];
   const v = s.revenue; // null when no Weekly Revenue sheet uploaded
   const refundsIssued = s.refunds.processed.count + s.refunds.pending.count;
   const refundRate = v ? pct(refundsIssued, v.totalCount) : 0;
@@ -239,6 +241,43 @@ export default function ExecutiveDashboard({ report, remit, onRemitChange, share
             </Commentary>
           </>
         )}
+
+        {/* Refunds Processed — collapsed by default; amount emphasized */}
+        <CollapsiblePanel
+          title="Refunds Processed"
+          metricLabel="Total Refund Amount"
+          metric={c(s.refunds.processed.total)}
+          sub={`${n(s.refunds.processed.count)} refund${s.refunds.processed.count === 1 ? '' : 's'} processed`}
+        >
+          {refundTx.length > 0 ? (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-400">
+                    <th className="px-3 py-2 font-medium">Date</th>
+                    <th className="px-3 py-2 text-right font-medium">Amount</th>
+                    <th className="px-3 py-2 font-medium">Status</th>
+                    <th className="px-3 py-2 font-medium">Category</th>
+                    <th className="px-3 py-2 font-medium">Reason</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {refundTx.map((t, i) => (
+                    <tr key={i} className="border-b border-slate-50">
+                      <td className="px-3 py-2 text-slate-600">{t.date}</td>
+                      <td className="px-3 py-2 text-right font-medium text-slate-700">{c(t.amount)}</td>
+                      <td className="px-3 py-2 text-slate-600">{t.status}</td>
+                      <td className="px-3 py-2 text-slate-600">{t.category}</td>
+                      <td className="px-3 py-2 text-slate-600">{t.reason}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <p className="text-sm text-slate-400">No processed refund transactions in the report week.</p>
+          )}
+        </CollapsiblePanel>
       </Section>
 
       {/* 3 — Customer Service Performance */}
@@ -387,6 +426,42 @@ export default function ExecutiveDashboard({ report, remit, onRemitChange, share
               </table>
             </div>
           </Panel>
+        )}
+
+        {/* Parkpliant Records — collapsible, collapsed by default */}
+        {parkRecords.length > 0 && (
+          <CollapsiblePanel
+            title="Parkpliant Records"
+            metricLabel="Violations Encoded"
+            metric={n(parkRecords.length)}
+            metricTone="slate"
+            sub={`${n(paid)} paid • ${collectionRate}% collection rate`}
+          >
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-400">
+                    <th className="px-3 py-2 font-medium">Notice #</th>
+                    <th className="px-3 py-2 font-medium">Date</th>
+                    <th className="px-3 py-2 text-right font-medium">Amount</th>
+                    <th className="px-3 py-2 font-medium">Status</th>
+                    <th className="px-3 py-2 font-medium">Facility</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {parkRecords.map((r, i) => (
+                    <tr key={i} className="border-b border-slate-50">
+                      <td className="px-3 py-2 font-medium text-slate-700">{r.notice}</td>
+                      <td className="px-3 py-2 text-slate-600">{r.date}</td>
+                      <td className="px-3 py-2 text-right text-slate-700">{c(r.amount)}</td>
+                      <td className="px-3 py-2 text-slate-600">{r.status}</td>
+                      <td className="px-3 py-2 text-slate-600">{r.facility}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CollapsiblePanel>
         )}
 
         <Commentary label="Operations Commentary">

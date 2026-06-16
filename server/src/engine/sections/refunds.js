@@ -44,6 +44,7 @@ export default {
     const pending = { count: 0, total: 0 };
     let issued = 0;
     let unclassified = 0;
+    const transactions = []; // processed refund transactions, for the detail panel
 
     for (const row of set) {
       const amount = Number(row.refundAmount) || Number(row.amount) || 0;
@@ -55,6 +56,15 @@ export default {
       if (isProcessed) {
         processed.count += 1;
         processed.total += amount;
+        if (scoped) {
+          transactions.push({
+            date: String(row.date || '').trim(),
+            amount: round2(amount),
+            status: String(row.refundStatus || '').trim(),
+            category: String(row.refundCategory || '').trim(),
+            reason: String(row.refundReason || '').trim(),
+          });
+        }
       } else if (isPending) {
         pending.count += 1;
         pending.total += amount;
@@ -73,6 +83,7 @@ export default {
       excluded,
       window: win ? { start: win.start, end: win.end } : null,
       total: round2(processed.total + pending.total),
+      transactions,
       sourced: scoped,
     };
   },

@@ -37,6 +37,17 @@ export async function exportToPdf(element, opts = {}) {
     }
   }
 
+  // Expand any collapsed sections (<details>) so the PDF captures their full
+  // content — a WYSIWYG export should include everything, even if collapsed
+  // on screen. Restore original state afterward.
+  const collapsibles = Array.from(element.querySelectorAll('details'));
+  const wasOpen = collapsibles.map((d) => d.open);
+  collapsibles.forEach((d) => {
+    d.open = true;
+  });
+  // Let layout settle after expanding before measuring/capturing.
+  await new Promise((r) => requestAnimationFrame(() => r()));
+
   // Full CSS dimensions of the report (including content below the fold).
   const cssWidth = element.scrollWidth;
   const cssHeight = element.scrollHeight;
@@ -114,6 +125,11 @@ export async function exportToPdf(element, opts = {}) {
   }
 
   pdf.save(fileName);
+
+  // Restore each collapsible to its original (collapsed) state.
+  collapsibles.forEach((d, i) => {
+    d.open = wasOpen[i];
+  });
 }
 
 export default exportToPdf;

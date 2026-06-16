@@ -38,7 +38,7 @@ export function formatCurrency(amount, currency = 'PHP') {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency,
-      currencyDisplay: 'code', // renders "PHP 185,000" rather than the ₱ symbol
+      currencyDisplay: 'narrowSymbol', // "$1,234" for USD
       minimumFractionDigits: 0,
       maximumFractionDigits: 2,
     })
