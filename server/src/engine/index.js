@@ -9,6 +9,7 @@ import refunds from './sections/refunds.js';
 import expenses from './sections/expenses.js';
 import { buildCharts } from './charts.js';
 import { TemplateSummaryProvider } from './summary/TemplateSummaryProvider.js';
+import { windowFromDates } from '../utils/dates.js';
 
 /**
  * Reporting Engine entry point.
@@ -95,15 +96,30 @@ function derivePeriod(rows) {
 }
 
 /**
+ * Derive the report week from the WEEKLY sheets (everything except the
+ * historical refund/reimbursement export), so a multi-month refund grid doesn't
+ * stretch the reporting period. Returns an inclusive day window (tz-stable), or
+ * null when there's no non-refund dated row to anchor on.
+ */
+function deriveReportWindow(rows) {
+  const dates = rows.filter((r) => !r._refundSource).map((r) => r.date);
+  return windowFromDates(dates);
+}
+
+/**
  * @param {Object[]} rows   normalized rows (from mapper.mapCsv)
  * @param {Object}   config ReportConfig
  * @param {Object}   [meta] extra meta to merge (e.g. warnings, generatedAt)
  */
 export function generateReport(rows, config, meta = {}) {
-  const sections = registry.runAll(rows, config);
-  const charts = buildCharts(rows, config);
+  // The report week is anchored on the weekly sheets; refunds are filtered to it.
+  const reportWindow = deriveReportWindow(rows);
+  const effectiveConfig = { ...config, reportWindow };
+
+  const sections = registry.runAll(rows, effectiveConfig);
+  const charts = buildCharts(rows, effectiveConfig);
   const metrics = buildMetrics(sections);
-  const summary = summaryProvider.generate(metrics, config);
+  const summary = summaryProvider.generate(metrics, effectiveConfig);
 
   // --- Refund diagnostics / logging ---------------------------------------
   // Surface refund-ingestion problems early (the refund-grid export uses generic
@@ -117,11 +133,22 @@ export function generateReport(rows, config, meta = {}) {
         `processed=${r.processed.count} pending=${r.pending.count} ` +
         `unclassified=${r.unclassified} total=${r.total}`
     );
-    if (r.issued === 0) {
-      refundWarnings.push('A refund/reimbursement sheet was uploaded but no refund records were read — check the file format.');
-    } else if (r.processed.count + r.pending.count === 0) {
+    if (r.excluded > 0 && r.issued === 0) {
       refundWarnings.push(
-        `${refundSourceRows} refund records were detected but none matched a PAID/PENDING status — check the STATUS column mapping.`
+        `All ${r.excluded} refund record(s) were dated outside the report week` +
+          `${r.window ? ` (${r.window.start} – ${r.window.end})` : ''} — the uploaded refund sheet does not cover this week.`
+      );
+    } else if (r.excluded > 0) {
+      refundWarnings.push(
+        `${r.excluded} refund record(s) outside the report week` +
+          `${r.window ? ` (${r.window.start} – ${r.window.end})` : ''} were excluded.`
+      );
+    }
+    if (r.issued === 0 && r.excluded === 0) {
+      refundWarnings.push('A refund/reimbursement sheet was uploaded but no refund records were read — check the file format.');
+    } else if (r.issued > 0 && r.processed.count + r.pending.count === 0) {
+      refundWarnings.push(
+        `${r.issued} refund records were detected but none matched a PAID/PENDING status — check the STATUS column mapping.`
       );
     } else if (r.unclassified > 0) {
       refundWarnings.push(`${r.unclassified} refund record(s) had an unrecognized STATUS and were counted as issued only.`);
@@ -136,7 +163,7 @@ export function generateReport(rows, config, meta = {}) {
   return {
     meta: {
       rowCount: rows.length,
-      period: derivePeriod(rows),
+      period: reportWindow ? { start: reportWindow.start, end: reportWindow.end } : derivePeriod(rows),
       currency: config.currency || 'PHP',
       ...meta,
       warnings: mergedWarnings,

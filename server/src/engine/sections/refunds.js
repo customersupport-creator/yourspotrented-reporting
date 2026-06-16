@@ -1,5 +1,6 @@
 import { classify } from '../../services/mapper.js';
 import { round2 } from '../../utils/num.js';
+import { parseYmd } from '../../utils/dates.js';
 
 /**
  * REFUNDS / REIMBURSEMENTS
@@ -20,8 +21,23 @@ export default {
   title: 'Refunds / Reimbursements',
   compute(rows, config) {
     const { rules } = config;
-    const refundRows = rows.filter((r) => r._refundSource);
+    let refundRows = rows.filter((r) => r._refundSource);
     const scoped = refundRows.length > 0;
+
+    // Weekly date-window filter: keep only refund records dated within the
+    // report week (config.reportWindow). Records with no parseable date are
+    // kept. Disable with config.refundWeekFilter === false.
+    const win = config.reportWindow;
+    let excluded = 0;
+    if (scoped && win && config.refundWeekFilter !== false) {
+      const before = refundRows.length;
+      refundRows = refundRows.filter((r) => {
+        const parsed = parseYmd(r.date);
+        return parsed == null || (parsed.ts >= win.startTs && parsed.ts <= win.endTs);
+      });
+      excluded = before - refundRows.length;
+    }
+
     const set = scoped ? refundRows : rows;
 
     const processed = { count: 0, total: 0 };
@@ -54,6 +70,8 @@ export default {
       pending: { count: pending.count, total: round2(pending.total) },
       issued,
       unclassified,
+      excluded,
+      window: win ? { start: win.start, end: win.end } : null,
       total: round2(processed.total + pending.total),
       sourced: scoped,
     };
