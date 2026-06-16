@@ -43,10 +43,14 @@ function periodDays(meta) {
   return Number.isFinite(d) && d > 0 ? Math.round(d) : 7;
 }
 
-function prettyDate(iso) {
-  if (!iso) return '';
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return String(iso).slice(0, 10);
+function prettyDate(value) {
+  if (!value) return '';
+  const s = String(value);
+  // Parse a date-only "YYYY-MM-DD" as a LOCAL date so the displayed day doesn't
+  // shift back one day in timezones behind UTC (e.g. "2026-06-08" → "June 8").
+  const m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  const d = m ? new Date(+m[1], +m[2] - 1, +m[3]) : new Date(s);
+  if (Number.isNaN(d.getTime())) return s.slice(0, 10);
   return d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 }
 

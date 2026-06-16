@@ -20,7 +20,8 @@ describe('POST /api/reports/generate', () => {
     expect(res.body.charts).toHaveProperty('expenseBreakdown');
     expect(typeof res.body.summary).toBe('string');
     expect(res.body.meta.rowCount).toBe(5);
-    expect(res.body.meta.period).toEqual({ start: '2026-06-01', end: '2026-06-03' });
+    // Period snaps to the Monday–Sunday week (data is Jun 1–3, a Mon–Wed).
+    expect(res.body.meta.period).toEqual({ start: '2026-06-01', end: '2026-06-07' });
   });
 
   it('rejects a request with no file (400)', async () => {

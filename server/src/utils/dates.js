@@ -36,12 +36,30 @@ export function parseYmd(value) {
 
 const DAY = 86400000;
 
-/** Inclusive day window from a list of date-ish values. */
-export function windowFromDates(values) {
+function ymdOf(ts) {
+  const d = new Date(ts);
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
+}
+
+/**
+ * Inclusive day window from a list of date-ish values.
+ * With { weekAlign: true } the window snaps to the Monday–Sunday week
+ * (weekly reporting standard): start = Monday on/before the earliest date,
+ * end = Sunday on/after the latest date. All math is UTC, so it's tz-stable.
+ */
+export function windowFromDates(values, { weekAlign = false } = {}) {
   const tss = values.map(parseYmd).filter(Boolean);
   if (!tss.length) return null;
   const sorted = tss.slice().sort((a, b) => a.ts - b.ts);
-  const min = sorted[0];
-  const max = sorted[sorted.length - 1];
-  return { start: min.ymd, end: max.ymd, startTs: min.ts, endTs: max.ts + DAY - 1 };
+  let startTs = sorted[0].ts;
+  let endTs = sorted[sorted.length - 1].ts;
+
+  if (weekAlign) {
+    const daysSinceMonday = (new Date(startTs).getUTCDay() + 6) % 7; // Mon=0 … Sun=6
+    startTs -= daysSinceMonday * DAY;
+    const daysUntilSunday = (7 - new Date(endTs).getUTCDay()) % 7; // 0 when already Sunday
+    endTs += daysUntilSunday * DAY;
+  }
+
+  return { start: ymdOf(startTs), end: ymdOf(endTs), startTs, endTs: endTs + DAY - 1 };
 }

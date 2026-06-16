@@ -103,7 +103,8 @@ function derivePeriod(rows) {
  */
 function deriveReportWindow(rows) {
   const dates = rows.filter((r) => !r._refundSource).map((r) => r.date);
-  return windowFromDates(dates);
+  // Weekly reporting standard: snap the period to its Monday–Sunday week.
+  return windowFromDates(dates, { weekAlign: true });
 }
 
 /**
