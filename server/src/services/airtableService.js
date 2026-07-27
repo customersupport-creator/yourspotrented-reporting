@@ -81,11 +81,16 @@ async function getSpotHeroRemit(weekStart, weekEnd) {
 }
 
 export async function getWeekData(weekStart, weekEnd) {
-  const [refunds, expenses, towed, parkpliant, csRecords, spotHero, facilities] = await Promise.all([
+  const [refunds, expenses, towed, parkpliant, settledParkpliant, csRecords, spotHero, facilities] = await Promise.all([
     fetchRecords(BASE_ID, TABLES.REFUNDS, dateFilter(weekStart, weekEnd)),
     fetchRecords(BASE_ID, TABLES.EXPENSES, dateFilter(weekStart, weekEnd)),
     fetchRecords(BASE_ID, TABLES.TOWED, dateFilter(weekStart, weekEnd, 'DATE')),
     fetchRecords(BASE_ID, TABLES.PARKPLIANT, dateFilter(weekStart, weekEnd, 'Encoded date and time')),
+    // "Paid on Parkpliant" should count violations that SETTLED this week,
+    // regardless of when they were originally encoded — a violation encoded
+    // last week but paid this week still counts. Queried separately by
+    // Settlement date since the main query above is scoped to Encoded date.
+    fetchRecords(BASE_ID, TABLES.PARKPLIANT, dateFilter(weekStart, weekEnd, 'Settlement date')),
     fetchRecords(BASE_ID, TABLES.CUSTOMER_SERVICE, dateFilter(weekStart, weekEnd)),
     getSpotHeroRemit(weekStart, weekEnd),
     fetchRecords(BASE_ID, TABLES.FACILITY_INFO),
@@ -130,10 +135,13 @@ export async function getWeekData(weekStart, weekEnd) {
 
   const towedRows = towed.map((r) => r.fields);
   const parkpliantRows = parkpliant.map((r) => r.fields);
+  // Settled-this-week set, independent of the encoded-this-week set above.
+  const violationsPaid = settledParkpliant
+    .map((r) => r.fields)
+    .filter((r) => r['Violation Status'] === 'Paid').length;
 
   const illegalParkersTowed = towedRows.length;
   const violationsEncoded = parkpliantRows.length;
-  const violationsPaid = parkpliantRows.filter((r) => r['Violation Status'] === 'Paid').length;
   const collectionRate = violationsEncoded > 0 ? (violationsPaid / violationsEncoded) * 100 : 0;
   const towConversionRate = violationsEncoded > 0 ? (illegalParkersTowed / violationsEncoded) * 100 : 0;
 
