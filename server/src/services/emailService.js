@@ -1,4 +1,5 @@
 import { Resend } from 'resend';
+import { renderReportPdf } from './reportPdf.js';
 
 // Lazily constructed so importing this module (e.g. via app.js in tests)
 // never throws just because RESEND_API_KEY isn't set in that environment —
@@ -170,12 +171,15 @@ export async function sendWeeklyReport(reportData, prevData) {
 
   const weekLabel = getWeekLabel(reportData.weekStart, reportData.weekEnd);
   const html = buildEmailHtml(reportData, prevData);
+  const pdfBuffer = await renderReportPdf(reportData, prevData);
+  const pdfFileName = `yourspotrented-weekly-report-${reportData.weekStart}-to-${reportData.weekEnd}.pdf`;
 
   const { data, error } = await getResendClient().emails.send({
     from: 'YourSpotRented Weekly Reports <onboarding@resend.dev>',
     to: recipients,
     subject: `Weekly Operations Report — ${weekLabel}`,
     html,
+    attachments: [{ filename: pdfFileName, content: pdfBuffer.toString('base64') }],
   });
 
   if (error) throw new Error(error.message);
