@@ -1,17 +1,15 @@
+import { useMemo } from 'react';
 import { useAirtableReport } from '../../hooks/useAirtableReport.js';
-import AirtableKpiCards from './AirtableKpiCards.jsx';
-
-function formatWeekLabel(start, end) {
-  if (!start || !end) return '';
-  const fmt = (d) =>
-    new Date(`${d}T00:00:00`).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-  return `${fmt(start)} – ${fmt(end)}`;
-}
+import { toExecutiveReport } from '../../utils/airtableToReport.js';
+import ExecutiveDashboard from '../executive/ExecutiveDashboard.jsx';
+import ExportButtons from '../ExportButtons.jsx';
 
 /**
  * Live, Airtable-driven weekly dashboard — replaces manual CSV upload with
- * direct reads from Airtable, shows week-over-week deltas on every KPI, and
- * exposes a manual "Send Email" trigger for the Resend-powered weekly report.
+ * direct reads from Airtable, renders the same Executive Dashboard
+ * presentation as the CSV flow (with week-over-week ▲/▼ badges added to every
+ * KPI card), and exposes a manual "Send Email" trigger for the Resend-powered
+ * weekly report.
  */
 export default function AirtableDashboard() {
   const {
@@ -28,6 +26,9 @@ export default function AirtableDashboard() {
     sendMessage,
     sendEmail,
   } = useAirtableReport();
+
+  const report = useMemo(() => toExecutiveReport(currentWeek), [currentWeek]);
+  const previousReport = useMemo(() => toExecutiveReport(previousWeek), [previousWeek]);
 
   return (
     <div className="space-y-6">
@@ -83,6 +84,7 @@ export default function AirtableDashboard() {
         </div>
 
         <div className="flex items-center gap-3">
+          {report && <ExportButtons report={report} remit={null} />}
           {sendMessage && (
             <span className={`text-xs ${sendState === 'error' ? 'text-rose-600' : 'text-emerald-600'}`}>
               {sendMessage}
@@ -110,16 +112,10 @@ export default function AirtableDashboard() {
         </div>
       )}
 
-      {status === 'ready' && currentWeek && (
-        <>
-          <p className="text-xs text-slate-400">
-            Reporting period: <span className="font-medium text-slate-600">{formatWeekLabel(weekStart, weekEnd)}</span>
-            {previousWeek && (
-              <> · compared against {formatWeekLabel(previousWeek.weekStart, previousWeek.weekEnd)}</>
-            )}
-          </p>
-          <AirtableKpiCards current={currentWeek} previous={previousWeek} />
-        </>
+      {status === 'ready' && report && (
+        <div id="report-capture" className="bg-slate-50">
+          <ExecutiveDashboard report={report} previousReport={previousReport} shared />
+        </div>
       )}
     </div>
   );

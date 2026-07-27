@@ -146,6 +146,8 @@ export async function getWeekData(weekStart, weekEnd) {
   const under5MinFRT = frtValues.filter((v) => v <= 5).length;
   const under5MinPct = frtValues.length > 0 ? (under5MinFRT / frtValues.length) * 100 : 0;
   const peakFRT = frtValues.length > 0 ? Math.max(...frtValues) : 0;
+  const instantFRT = frtValues.filter((v) => v === 0).length;
+  const instantPct = frtValues.length > 0 ? (instantFRT / frtValues.length) * 100 : 0;
 
   const dailyVolume = {};
   csRows.forEach((r) => {
@@ -218,6 +220,7 @@ export async function getWeekData(weekStart, weekEnd) {
       under5MinFRT,
       under5MinPct,
       peakFRT,
+      instantPct,
       dailyAverage: totalCases / 7,
       dailyVolume,
       channelDist,

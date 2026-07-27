@@ -23,13 +23,15 @@ const ACCENT = {
   red: 'border-t-red-500',
 };
 
-/** A single KPI card: colored top-accent, uppercase label, large value, sub-text. */
-export function KpiCard({ label, value, sub, tone = 'blue' }) {
+/** A single KPI card: colored top-accent, uppercase label, large value, sub-text.
+ *  `delta` is an optional pre-rendered node (e.g. a week-over-week badge). */
+export function KpiCard({ label, value, sub, tone = 'blue', delta }) {
   return (
     <div data-pdf-block className={`rounded-xl border border-slate-200 border-t-4 ${ACCENT[tone] || ACCENT.blue} bg-white p-5 shadow-sm`}>
       <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</p>
       <p className={`mt-2 text-3xl font-extrabold leading-tight ${TONE[tone] || TONE.blue}`}>{value}</p>
       {sub && <p className="mt-1 text-sm text-slate-400">{sub}</p>}
+      {delta}
     </div>
   );
 }

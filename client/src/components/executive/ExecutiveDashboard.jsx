@@ -16,6 +16,7 @@ import {
 import { formatCurrency, formatCount } from '../../utils/format.js';
 import RemitEntry from '../RemitEntry.jsx';
 import { KpiCard, KpiGrid, Section, Panel, CollapsiblePanel, SummaryCard, Commentary, InsightCard } from './ExecPrimitives.jsx';
+import DeltaBadge from '../airtable/DeltaBadge.jsx';
 
 /**
  * Weekly Operations Executive Dashboard — a presentation-only re-skin of the
@@ -54,12 +55,20 @@ function prettyDate(value) {
   return d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 }
 
-export default function ExecutiveDashboard({ report, remit, onRemitChange, shared }) {
+export default function ExecutiveDashboard({ report, remit, onRemitChange, shared, previousReport }) {
   if (!report) return null;
   const { sections: s, charts, meta, summary } = report;
   const currency = meta.currency || 'PHP';
   const c = (n) => formatCurrency(n, currency);
   const n = (x) => formatCount(x);
+
+  // Week-over-week ▲/▼ badges — only rendered when a previous week's report
+  // was supplied (the CSV flow doesn't pass one, so it renders exactly as
+  // before; the live Airtable flow does).
+  const ps = previousReport?.sections;
+  const pa = ps?.serviceAnalytics;
+  const pd = (current, previous, opts) =>
+    ps ? <DeltaBadge current={current} previous={previous} {...opts} /> : null;
 
   const netRemit = remit?.hasInput ? remit.totalNetRemit : s.netRemit.total;
   const encoded = s.highlights.encoded;
@@ -140,12 +149,12 @@ export default function ExecutiveDashboard({ report, remit, onRemitChange, share
           </KpiGrid>
         ) : (
           <KpiGrid>
-            <KpiCard label="Total Net Remittance" tone="blue" value={c(netRemit)} sub={`${n(s.netRemit.contributingRows || 0)} contributing records`} />
-            <KpiCard label="Customer Service" tone="violet" value={n(csCases)} sub="interactions handled this week" />
-            <KpiCard label="Violations Encoded" tone="slate" value={n(encoded)} sub="logged in Parkpliant" />
-            <KpiCard label="Paid on Parkpliant" tone="amber" value={n(paid)} sub={`${n(paid)} of ${n(encoded)} • ${collectionRate}% collection rate`} />
-            <KpiCard label="Illegal Parkers Towed" tone="emerald" value={n(towed)} sub="vehicles removed" />
-            <KpiCard label="Total Expenses" tone="slate" value={c(s.expenses.total)} sub="management expenses" />
+            <KpiCard label="Total Net Remittance" tone="blue" value={c(netRemit)} sub={`${n(s.netRemit.contributingRows || 0)} contributing records`} delta={pd(netRemit, ps?.netRemit.total)} />
+            <KpiCard label="Customer Service" tone="violet" value={n(csCases)} sub="interactions handled this week" delta={pd(csCases, ps?.customerService.caseCount)} />
+            <KpiCard label="Violations Encoded" tone="slate" value={n(encoded)} sub="logged in Parkpliant" delta={pd(encoded, ps?.highlights.encoded)} />
+            <KpiCard label="Paid on Parkpliant" tone="amber" value={n(paid)} sub={`${n(paid)} of ${n(encoded)} • ${collectionRate}% collection rate`} delta={pd(paid, ps?.highlights.paid)} />
+            <KpiCard label="Illegal Parkers Towed" tone="emerald" value={n(towed)} sub="vehicles removed" delta={pd(towed, ps?.highlights.towed, { higherIsBetter: false })} />
+            <KpiCard label="Total Expenses" tone="slate" value={c(s.expenses.total)} sub="management expenses" delta={pd(s.expenses.total, ps?.expenses.total, { higherIsBetter: false })} />
           </KpiGrid>
         )}
       </Section>
@@ -203,10 +212,10 @@ export default function ExecutiveDashboard({ report, remit, onRemitChange, share
         ) : (
           <>
             <KpiGrid>
-              <KpiCard label="Net Remittance" tone="blue" value={c(netRemit)} sub="total net remit this week" />
-              <KpiCard label="Refunds Processed" tone="emerald" value={n(s.refunds.processed.count)} sub={c(s.refunds.processed.total)} />
-              <KpiCard label="Refunds Pending" tone="amber" value={n(s.refunds.pending.count)} sub={c(s.refunds.pending.total)} />
-              <KpiCard label="Total Expenses" tone="slate" value={c(s.expenses.total)} sub={`${n(s.expenses.byCategory.length)} categories`} />
+              <KpiCard label="Net Remittance" tone="blue" value={c(netRemit)} sub="total net remit this week" delta={pd(netRemit, ps?.netRemit.total)} />
+              <KpiCard label="Refunds Processed" tone="emerald" value={n(s.refunds.processed.count)} sub={c(s.refunds.processed.total)} delta={pd(s.refunds.processed.count, ps?.refunds.processed.count)} />
+              <KpiCard label="Refunds Pending" tone="amber" value={n(s.refunds.pending.count)} sub={c(s.refunds.pending.total)} delta={pd(s.refunds.pending.count, ps?.refunds.pending.count, { higherIsBetter: false })} />
+              <KpiCard label="Total Expenses" tone="slate" value={c(s.expenses.total)} sub={`${n(s.expenses.byCategory.length)} categories`} delta={pd(s.expenses.total, ps?.expenses.total, { higherIsBetter: false })} />
             </KpiGrid>
 
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
@@ -289,12 +298,12 @@ export default function ExecutiveDashboard({ report, remit, onRemitChange, share
         {a ? (
           <>
             <KpiGrid cols={3}>
-              <KpiCard label="Total Cases" tone="violet" value={n(a.total)} sub="all customer interactions this week" />
-              <KpiCard label="Resolved" tone="emerald" value={n(a.resolved)} sub={`${a.resolutionRate}% resolution rate`} />
-              <KpiCard label="Avg First Response" tone="emerald" value={`${a.frt.avg} min`} sub={`${a.frt.instantPct}% answered instantly (0 min)`} />
-              <KpiCard label="Under 5 Min FRT" tone="emerald" value={`${a.frt.under5Pct}%`} sub={`${n(a.frt.under5)} of ${n(a.total)} cases`} />
-              <KpiCard label="Daily Average" tone="slate" value={n(a.dailyAverage)} sub="cases per day" />
-              <KpiCard label="Peak FRT" tone="amber" value={`${n(a.frt.peak)} min`} sub="slowest single case" />
+              <KpiCard label="Total Cases" tone="violet" value={n(a.total)} sub="all customer interactions this week" delta={pd(a.total, pa?.total)} />
+              <KpiCard label="Resolved" tone="emerald" value={n(a.resolved)} sub={`${a.resolutionRate}% resolution rate`} delta={pd(a.resolutionRate, pa?.resolutionRate, { suffix: ' pts' })} />
+              <KpiCard label="Avg First Response" tone="emerald" value={`${a.frt.avg} min`} sub={`${a.frt.instantPct}% answered instantly (0 min)`} delta={pd(a.frt.avg, pa?.frt.avg, { higherIsBetter: false })} />
+              <KpiCard label="Under 5 Min FRT" tone="emerald" value={`${a.frt.under5Pct}%`} sub={`${n(a.frt.under5)} of ${n(a.total)} cases`} delta={pd(a.frt.under5Pct, pa?.frt.under5Pct, { suffix: ' pts' })} />
+              <KpiCard label="Daily Average" tone="slate" value={n(a.dailyAverage)} sub="cases per day" delta={pd(a.dailyAverage, pa?.dailyAverage)} />
+              <KpiCard label="Peak FRT" tone="amber" value={`${n(a.frt.peak)} min`} sub="slowest single case" delta={pd(a.frt.peak, pa?.frt.peak, { higherIsBetter: false })} />
             </KpiGrid>
 
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
@@ -359,10 +368,10 @@ export default function ExecutiveDashboard({ report, remit, onRemitChange, share
       {/* 4 — Operations & Enforcement */}
       <Section index="4" title="Operations & Enforcement">
         <KpiGrid>
-          <KpiCard label="Illegal Parkers Encoded" tone="slate" value={n(encoded)} sub="logged in Parkpliant this week" />
-          <KpiCard label="Vehicles Towed" tone="emerald" value={n(towed)} sub="illegal parkers removed" />
-          <KpiCard label="Tow Conversion Rate" tone="amber" value={`${towConversion}%`} sub={`${n(towed)} towed of ${n(encoded)} encoded`} />
-          <KpiCard label="Paid on Parkpliant" tone="amber" value={n(paid)} sub={`${collectionRate}% collection rate`} />
+          <KpiCard label="Illegal Parkers Encoded" tone="slate" value={n(encoded)} sub="logged in Parkpliant this week" delta={pd(encoded, ps?.highlights.encoded)} />
+          <KpiCard label="Vehicles Towed" tone="emerald" value={n(towed)} sub="illegal parkers removed" delta={pd(towed, ps?.highlights.towed, { higherIsBetter: false })} />
+          <KpiCard label="Tow Conversion Rate" tone="amber" value={`${towConversion}%`} sub={`${n(towed)} towed of ${n(encoded)} encoded`} delta={pd(towConversion, ps && pct(ps.highlights.towed, ps.highlights.encoded), { suffix: ' pts' })} />
+          <KpiCard label="Paid on Parkpliant" tone="amber" value={n(paid)} sub={`${collectionRate}% collection rate`} delta={pd(paid, ps?.highlights.paid)} />
         </KpiGrid>
 
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
@@ -478,12 +487,12 @@ export default function ExecutiveDashboard({ report, remit, onRemitChange, share
       {/* 5 — Key Performance Indicators */}
       <Section index="5" title="Key Performance Indicators">
         <KpiGrid cols={3}>
-          <KpiCard label="Net Remittance" tone="blue" value={c(netRemit)} sub="total net remit this week" />
-          <KpiCard label="Parkpliant Collection Rate" tone="emerald" value={`${collectionRate}%`} sub={`${n(paid)} of ${n(encoded)} paid`} />
-          <KpiCard label="Tow Conversion Rate" tone="amber" value={`${towConversion}%`} sub={`${n(towed)} of ${n(encoded)} encoded`} />
-          <KpiCard label="CS Cases / Day" tone="violet" value={n(csPerDay)} sub={`${n(csCases)} total interactions`} />
-          <KpiCard label="Refunds (Total)" tone="slate" value={n(refundsTotalCount)} sub={`${n(s.refunds.processed.count)} processed • ${n(s.refunds.pending.count)} pending`} />
-          <KpiCard label="Total Expenses" tone="slate" value={c(s.expenses.total)} sub="management expenses" />
+          <KpiCard label="Net Remittance" tone="blue" value={c(netRemit)} sub="total net remit this week" delta={pd(netRemit, ps?.netRemit.total)} />
+          <KpiCard label="Parkpliant Collection Rate" tone="emerald" value={`${collectionRate}%`} sub={`${n(paid)} of ${n(encoded)} paid`} delta={pd(collectionRate, ps && pct(ps.highlights.paid, ps.highlights.encoded), { suffix: ' pts' })} />
+          <KpiCard label="Tow Conversion Rate" tone="amber" value={`${towConversion}%`} sub={`${n(towed)} of ${n(encoded)} encoded`} delta={pd(towConversion, ps && pct(ps.highlights.towed, ps.highlights.encoded), { suffix: ' pts' })} />
+          <KpiCard label="CS Cases / Day" tone="violet" value={n(csPerDay)} sub={`${n(csCases)} total interactions`} delta={pd(csPerDay, pa?.dailyAverage)} />
+          <KpiCard label="Refunds (Total)" tone="slate" value={n(refundsTotalCount)} sub={`${n(s.refunds.processed.count)} processed • ${n(s.refunds.pending.count)} pending`} delta={pd(refundsTotalCount, ps && ps.refunds.processed.count + ps.refunds.pending.count, { higherIsBetter: false })} />
+          <KpiCard label="Total Expenses" tone="slate" value={c(s.expenses.total)} sub="management expenses" delta={pd(s.expenses.total, ps?.expenses.total, { higherIsBetter: false })} />
         </KpiGrid>
 
         <div className="mt-2">
