@@ -1,6 +1,13 @@
 import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Lazily constructed so importing this module (e.g. via app.js in tests)
+// never throws just because RESEND_API_KEY isn't set in that environment —
+// the key is only required once an email actually needs to go out.
+let resendClient = null;
+function getResendClient() {
+  if (!resendClient) resendClient = new Resend(process.env.RESEND_API_KEY);
+  return resendClient;
+}
 
 function getWeekLabel(weekStart, weekEnd) {
   const fmt = (d) =>
@@ -164,7 +171,7 @@ export async function sendWeeklyReport(reportData, prevData) {
   const weekLabel = getWeekLabel(reportData.weekStart, reportData.weekEnd);
   const html = buildEmailHtml(reportData, prevData);
 
-  const { data, error } = await resend.emails.send({
+  const { data, error } = await getResendClient().emails.send({
     from: 'YourSpotRented Weekly Reports <onboarding@resend.dev>',
     to: recipients,
     subject: `Weekly Operations Report — ${weekLabel}`,
