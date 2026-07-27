@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { getWeekData, getPreviousWeekData } from '../services/airtableService.js';
 import { sendWeeklyReport } from '../services/emailService.js';
+import { getLastWeekRange } from '../jobs/weeklyEmailJob.js';
 
 const router = Router();
 
@@ -53,15 +54,21 @@ router.post('/send-email', async (req, res, next) => {
 
 router.get('/health', (req, res) => {
   const hasAirtable = !!process.env.AIRTABLE_API_KEY && !!process.env.AIRTABLE_BASE_ID;
-  const hasEmail = !!process.env.GMAIL_USER && !!process.env.GMAIL_APP_PASSWORD;
+  const hasEmail = !!process.env.RESEND_API_KEY;
   const hasRecipients = !!process.env.REPORT_RECIPIENTS;
 
   res.json({
     airtable: hasAirtable ? 'configured' : 'missing credentials',
-    email: hasEmail ? 'configured' : 'missing credentials',
+    email: hasEmail ? 'configured' : 'missing RESEND_API_KEY',
     recipients: hasRecipients ? process.env.REPORT_RECIPIENTS : 'not set',
     status: hasAirtable && hasEmail && hasRecipients ? 'ready' : 'incomplete',
   });
+});
+
+// Convenience for the client: the most recently completed Monday–Sunday week,
+// used to pre-fill the week picker on first load.
+router.get('/default-week', (req, res) => {
+  res.json(getLastWeekRange());
 });
 
 export default router;

@@ -11,6 +11,7 @@ import Charts from './components/dashboard/Charts.jsx';
 import ExecutiveDashboard from './components/executive/ExecutiveDashboard.jsx';
 import ShareButton from './components/ShareButton.jsx';
 import SharedReport from './components/SharedReport.jsx';
+import AirtableDashboard from './components/airtable/AirtableDashboard.jsx';
 
 export default function App() {
   // Public shared-report route: /r/<id> renders the saved report read-only.
@@ -28,6 +29,9 @@ function Workspace() {
   // View switch only — same data, same flow. 'executive' is the new layout;
   // 'classic' preserves the original dashboard so nothing is lost.
   const [view, setView] = useState('executive');
+  // Data source: 'live' pulls straight from Airtable (default). 'csv' keeps
+  // the original upload-driven flow available as a fallback.
+  const [dataSource, setDataSource] = useState('live');
 
   const canGenerate = status === 'ready' || status === 'done' || (status === 'error' && hasFiles);
   const generating = status === 'generating';
@@ -39,10 +43,26 @@ function Workspace() {
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
           <div>
             <h1 className="text-lg font-bold text-slate-800">YourSpotRented — Weekly Reporting Tool</h1>
-            <p className="text-xs text-slate-400">Upload a CSV, generate the weekly operations report.</p>
+            <p className="text-xs text-slate-400">
+              {dataSource === 'live' ? 'Live data from Airtable — updates automatically.' : 'Upload a CSV, generate the weekly operations report.'}
+            </p>
           </div>
           <div className="flex items-center gap-4">
-            {report && (
+            <div className="flex rounded-lg border border-slate-200 p-0.5 text-xs font-medium">
+              <button
+                onClick={() => setDataSource('live')}
+                className={`rounded-md px-3 py-1.5 ${dataSource === 'live' ? 'bg-brand-600 text-white' : 'text-slate-500 hover:text-slate-700'}`}
+              >
+                Live (Airtable)
+              </button>
+              <button
+                onClick={() => setDataSource('csv')}
+                className={`rounded-md px-3 py-1.5 ${dataSource === 'csv' ? 'bg-brand-600 text-white' : 'text-slate-500 hover:text-slate-700'}`}
+              >
+                CSV Upload (legacy)
+              </button>
+            </div>
+            {dataSource === 'csv' && report && (
               <div className="flex rounded-lg border border-slate-200 p-0.5 text-xs font-medium">
                 <button
                   onClick={() => setView('executive')}
@@ -58,13 +78,17 @@ function Workspace() {
                 </button>
               </div>
             )}
-            {report && <ShareButton report={report} remit={remit} />}
-            {report && <ExportButtons report={report} remit={remit} />}
+            {dataSource === 'csv' && report && <ShareButton report={report} remit={remit} />}
+            {dataSource === 'csv' && report && <ExportButtons report={report} remit={remit} />}
           </div>
         </div>
       </header>
 
       <main className="mx-auto max-w-7xl space-y-6 px-6 py-8">
+        {dataSource === 'live' && <AirtableDashboard />}
+
+        {dataSource === 'csv' && (
+        <>
         {/* Upload + mapping + actions */}
         <div className="space-y-4">
           <UploadDropzone onFiles={addFiles} status={status} />
@@ -155,6 +179,8 @@ function Workspace() {
               </div>
             )}
           </div>
+        )}
+        </>
         )}
       </main>
 

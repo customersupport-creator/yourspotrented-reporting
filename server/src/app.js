@@ -9,7 +9,6 @@ import reportRoutes from './routes/reports.js';
 import shareRoutes from './routes/share.js';
 import airtableRoutes from './routes/airtable.js';
 import { errorHandler, notFound } from './middleware/errorHandler.js';
-import { startWeeklyEmailJob } from './jobs/weeklyEmailJob.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -30,7 +29,6 @@ export function createApp() {
   app.use('/api/reports', reportRoutes);
   app.use('/api/reports', shareRoutes); // /api/reports/publish, /api/reports/shared/:id
   app.use('/api/airtable', airtableRoutes);
-  startWeeklyEmailJob();
 
   // Serve the built client (client/dist) from the same process whenever it has
   // been built (production deploys like Render) — falls back gracefully in dev.
