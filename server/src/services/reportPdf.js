@@ -397,8 +397,18 @@ function ReportDocument({ week, previous }) {
           : h(Text, { style: { fontSize: 8, color: '#94a3b8' } }, 'No refund transactions in this period.')
       ),
 
-      // 3 — Customer Service Performance
-      h(SectionHeader, { index: 3, title: 'Customer Service Performance' }),
+      // 3 — Weekly Total Net Remit (SpotHero transient/monthly breakdown)
+      h(SectionHeader, { index: 3, title: 'Weekly Total Net Remit' }),
+      h(
+        View,
+        { style: styles.kpiGrid },
+        h(KpiCard, { wide: true, label: 'Net Transient', value: money(f.netTransient), sub: `${count(f.transientReservations)} transient reservations`, color: COLORS.blue, deltaInfo: delta(f.netTransient, pf?.netTransient) }),
+        h(KpiCard, { wide: true, label: 'Net Monthly', value: money(f.netMonthly), sub: `${count(f.monthlyReservations)} monthly reservations`, color: COLORS.violet, deltaInfo: delta(f.netMonthly, pf?.netMonthly) }),
+        h(KpiCard, { wide: true, label: 'Total Net Remit', value: money(f.totalNetRemit), sub: `${count(f.totalReservations)} total reservations`, color: COLORS.emerald, deltaInfo: delta(f.totalNetRemit, pf?.totalNetRemit) })
+      ),
+
+      // 4 — Customer Service Performance
+      h(SectionHeader, { index: 4, title: 'Customer Service Performance' }),
       h(
         View,
         { style: styles.kpiGrid },
@@ -418,8 +428,8 @@ function ReportDocument({ week, previous }) {
         `average first response of ${cs.avgFRT.toFixed(2)} minutes (${cs.instantPct.toFixed(1)}% answered instantly). Daily volume averaged ${count(cs.dailyAverage)} cases.`
       ),
 
-      // 4 — Operations & Enforcement
-      h(SectionHeader, { index: 4, title: 'Operations & Enforcement' }),
+      // 5 — Operations & Enforcement
+      h(SectionHeader, { index: 5, title: 'Operations & Enforcement' }),
       h(
         View,
         { style: styles.kpiGrid },
@@ -468,8 +478,8 @@ function ReportDocument({ week, previous }) {
         `(${towConversion}% tow conversion). ${count(e.violationsPaid)} of ${count(e.violationsEncoded)} encoded violations have been paid (${collectionRate}% collection rate).`
       ),
 
-      // 5 — Key Performance Indicators
-      h(SectionHeader, { index: 5, title: 'Key Performance Indicators' }),
+      // 6 — Key Performance Indicators
+      h(SectionHeader, { index: 6, title: 'Key Performance Indicators' }),
       h(
         View,
         { style: styles.kpiGrid },

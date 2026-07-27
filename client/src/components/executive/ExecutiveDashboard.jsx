@@ -293,8 +293,37 @@ export default function ExecutiveDashboard({ report, remit, onRemitChange, share
         </CollapsiblePanel>
       </Section>
 
-      {/* 3 — Customer Service Performance */}
-      <Section index="3" title="Customer Service Performance">
+      {/* 3 — Weekly Total Net Remit (SpotHero transient/monthly breakdown) */}
+      {s.netRemit.netTransient !== undefined && (
+        <Section index="3" title="Weekly Total Net Remit">
+          <KpiGrid cols={3}>
+            <KpiCard
+              label="Net Transient"
+              tone="blue"
+              value={c(s.netRemit.netTransient)}
+              sub={`${n(s.netRemit.transientReservations)} transient reservations`}
+              delta={pd(s.netRemit.netTransient, ps?.netRemit.netTransient)}
+            />
+            <KpiCard
+              label="Net Monthly"
+              tone="violet"
+              value={c(s.netRemit.netMonthly)}
+              sub={`${n(s.netRemit.monthlyReservations)} monthly reservations`}
+              delta={pd(s.netRemit.netMonthly, ps?.netRemit.netMonthly)}
+            />
+            <KpiCard
+              label="Total Net Remit"
+              tone="emerald"
+              value={c(s.netRemit.total)}
+              sub={`${n(s.netRemit.contributingRows)} total reservations`}
+              delta={pd(s.netRemit.total, ps?.netRemit.total)}
+            />
+          </KpiGrid>
+        </Section>
+      )}
+
+      {/* 4 — Customer Service Performance */}
+      <Section index="4" title="Customer Service Performance">
         {a ? (
           <>
             <KpiGrid cols={3}>
@@ -365,8 +394,8 @@ export default function ExecutiveDashboard({ report, remit, onRemitChange, share
         )}
       </Section>
 
-      {/* 4 — Operations & Enforcement */}
-      <Section index="4" title="Operations & Enforcement">
+      {/* 5 — Operations & Enforcement */}
+      <Section index="5" title="Operations & Enforcement">
         <KpiGrid>
           <KpiCard label="Illegal Parkers Encoded" tone="slate" value={n(encoded)} sub="logged in Parkpliant this week" delta={pd(encoded, ps?.highlights.encoded)} />
           <KpiCard label="Vehicles Towed" tone="emerald" value={n(towed)} sub="illegal parkers removed" delta={pd(towed, ps?.highlights.towed, { higherIsBetter: false })} />
@@ -484,8 +513,8 @@ export default function ExecutiveDashboard({ report, remit, onRemitChange, share
         </Commentary>
       </Section>
 
-      {/* 5 — Key Performance Indicators */}
-      <Section index="5" title="Key Performance Indicators">
+      {/* 6 — Key Performance Indicators */}
+      <Section index="6" title="Key Performance Indicators">
         <KpiGrid cols={3}>
           <KpiCard label="Net Remittance" tone="blue" value={c(netRemit)} sub="total net remit this week" delta={pd(netRemit, ps?.netRemit.total)} />
           <KpiCard label="Parkpliant Collection Rate" tone="emerald" value={`${collectionRate}%`} sub={`${n(paid)} of ${n(encoded)} paid`} delta={pd(collectionRate, ps && pct(ps.highlights.paid, ps.highlights.encoded), { suffix: ' pts' })} />

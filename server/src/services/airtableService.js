@@ -89,11 +89,15 @@ export async function getWeekData(weekStart, weekEnd) {
   const refundRows = refunds.map((r) => r.fields);
   const expenseRows = expenses.map((r) => r.fields);
 
+  // The refund table's STATUS choices are uppercase ("PAID", "PENDING",
+  // "COMPLETED", "CANCELLED") — matching title-case 'Paid' here always failed,
+  // which is why "Refunds Processed" always showed 0 despite paid rows
+  // existing in the data.
   const refundsProcessed = refundRows.filter(
-    (r) => r.STATUS === 'Paid' && (r.CATEGORY === 'REFUND' || r.CATEGORY === 'REFUND+REWARD')
+    (r) => r.STATUS === 'PAID' && (r.CATEGORY === 'REFUND' || r.CATEGORY === 'REFUND+REWARD')
   );
   const refundsPending = refundRows.filter(
-    (r) => r.STATUS !== 'Paid' && (r.CATEGORY === 'REFUND' || r.CATEGORY === 'REFUND+REWARD')
+    (r) => r.STATUS !== 'PAID' && (r.CATEGORY === 'REFUND' || r.CATEGORY === 'REFUND+REWARD')
   );
 
   const totalRefundsProcessed = refundsProcessed.reduce((s, r) => s + (r.AMOUNT || 0), 0);
@@ -130,10 +134,17 @@ export async function getWeekData(weekStart, weekEnd) {
 
   const parkpliantLog = parkpliantRows.map((r) => ({
     noticeNumber: r['Violation Notice number'],
-    date: r['Encoded date and time'],
+    // Paid violations show the date they actually settled; everything else
+    // (still Encoded, or Voided) shows the date it was originally encoded.
+    date: r['Violation Status'] === 'Paid'
+      ? r['Settlement date'] || r['Encoded date and time']
+      : r['Encoded date and time'],
     amount: r['Violation Amount'],
     status: r['Violation Status'],
-    facility: r['FACILITY']?.[0] || '',
+    // FACILITY is a linked-record field — Airtable returns an array of
+    // { id, name } objects, so the display name must be pulled off .name
+    // (previously this stored the raw linked-record object).
+    facility: r['FACILITY']?.[0]?.name || '',
   }));
 
   const csRows = csRecords.map((r) => r.fields);
@@ -195,7 +206,11 @@ export async function getWeekData(weekStart, weekEnd) {
       totalExpenses,
       expenseByCategory,
       refundByCategory,
-      refundRows: refundRows.map((r) => ({
+      // Only the processed (PAID) refund/reimbursement rows — this list is
+      // rendered under the "Refunds Processed" heading everywhere (dashboard,
+      // PDF, email), so it should match what that heading's count/total say,
+      // not include pending/cancelled rows too.
+      refundRows: refundsProcessed.map((r) => ({
         date: r.DATE,
         amount: r.AMOUNT,
         status: r.STATUS,

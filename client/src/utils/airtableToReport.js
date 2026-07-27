@@ -73,6 +73,10 @@ function toSections(week) {
     netRemit: {
       total: f.totalNetRemit,
       contributingRows: f.totalReservations,
+      netTransient: f.netTransient,
+      transientReservations: f.transientReservations,
+      netMonthly: f.netMonthly,
+      monthlyReservations: f.monthlyReservations,
     },
     highlights: {
       encoded: e.violationsEncoded,
