@@ -14,6 +14,10 @@ const TABLES = {
   PARKPLIANT: 'tblZCyd4Jc1jMx9an',
   CUSTOMER_SERVICE: 'tblViMnfhcqyMKBHU',
   WEEKLY_REPORT: 'tbleah1RWp0CqgsWs',
+  // Parkpliant Records' FACILITY field is a linked record — the REST API only
+  // ever returns the linked record IDs (never the facility name), so those
+  // IDs have to be resolved against this table separately.
+  FACILITY_INFO: 'tblmun9KBYW4aYBe1',
 };
 
 const SPOTHERO_TABLES = {
@@ -77,14 +81,22 @@ async function getSpotHeroRemit(weekStart, weekEnd) {
 }
 
 export async function getWeekData(weekStart, weekEnd) {
-  const [refunds, expenses, towed, parkpliant, csRecords, spotHero] = await Promise.all([
+  const [refunds, expenses, towed, parkpliant, csRecords, spotHero, facilities] = await Promise.all([
     fetchRecords(BASE_ID, TABLES.REFUNDS, dateFilter(weekStart, weekEnd)),
     fetchRecords(BASE_ID, TABLES.EXPENSES, dateFilter(weekStart, weekEnd)),
     fetchRecords(BASE_ID, TABLES.TOWED, dateFilter(weekStart, weekEnd, 'DATE')),
     fetchRecords(BASE_ID, TABLES.PARKPLIANT, dateFilter(weekStart, weekEnd, 'Encoded date and time')),
     fetchRecords(BASE_ID, TABLES.CUSTOMER_SERVICE, dateFilter(weekStart, weekEnd)),
     getSpotHeroRemit(weekStart, weekEnd),
+    fetchRecords(BASE_ID, TABLES.FACILITY_INFO),
   ]);
+
+  // Map of facility record ID -> facility name, used to resolve Parkpliant's
+  // linked FACILITY field (the API only gives back record IDs there).
+  const facilityNameById = {};
+  facilities.forEach((r) => {
+    facilityNameById[r.id] = r.fields['FACILITY NAME'] || '';
+  });
 
   const refundRows = refunds.map((r) => r.fields);
   const expenseRows = expenses.map((r) => r.fields);
@@ -141,10 +153,10 @@ export async function getWeekData(weekStart, weekEnd) {
       : r['Encoded date and time'],
     amount: r['Violation Amount'],
     status: r['Violation Status'],
-    // FACILITY is a linked-record field — Airtable returns an array of
-    // { id, name } objects, so the display name must be pulled off .name
-    // (previously this stored the raw linked-record object).
-    facility: r['FACILITY']?.[0]?.name || '',
+    // FACILITY is a linked-record field — the API only returns the linked
+    // record's ID (e.g. "recXXXXXXXXXXXXXX"), never its name, so it has to be
+    // resolved against the Facility Information table fetched above.
+    facility: facilityNameById[r['FACILITY']?.[0]] || '',
   }));
 
   const csRows = csRecords.map((r) => r.fields);

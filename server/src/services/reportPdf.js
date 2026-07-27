@@ -51,12 +51,6 @@ const styles = StyleSheet.create({
   panel: { borderWidth: 1, borderColor: COLORS.slate200, borderRadius: 6, padding: 10, marginBottom: 10 },
   panelTitle: { fontSize: 10, fontFamily: 'Helvetica-Bold', color: COLORS.navy2, marginBottom: 8 },
 
-  barRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 5 },
-  barLabel: { width: 130, fontSize: 7.5, color: '#475569' },
-  barTrack: { flex: 1, height: 9, backgroundColor: '#f1f5f9', borderRadius: 2, marginHorizontal: 6, overflow: 'hidden' },
-  barFill: { height: 9, borderRadius: 2 },
-  barValue: { width: 44, fontSize: 7.5, color: '#334155', textAlign: 'right' },
-
   table: { borderWidth: 1, borderColor: COLORS.slate200, borderRadius: 4 },
   tHeadRow: { flexDirection: 'row', backgroundColor: '#f8fafc', borderBottomWidth: 1, borderBottomColor: COLORS.slate200 },
   tRow: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
@@ -133,31 +127,6 @@ function SectionHeader({ index, title }) {
     { style: styles.sectionHeader },
     h(Text, { style: styles.sectionIndex }, String(index)),
     h(Text, { style: styles.sectionTitle }, title)
-  );
-}
-
-/** Simple horizontal-bar breakdown panel (stands in for a donut/bar chart). */
-function BarPanel({ title, items, color = COLORS.blue, fmt = count }) {
-  const max = Math.max(1, ...items.map((i) => i.value));
-  return h(
-    View,
-    { style: styles.panel },
-    h(Text, { style: styles.panelTitle }, title),
-    items.length === 0
-      ? h(Text, { style: { fontSize: 8, color: '#94a3b8' } }, 'No data')
-      : items.map((item, i) =>
-          h(
-            View,
-            { style: styles.barRow, key: i },
-            h(Text, { style: styles.barLabel }, item.label),
-            h(
-              View,
-              { style: styles.barTrack },
-              h(View, { style: [styles.barFill, { width: `${Math.max(2, (item.value / max) * 100)}%`, backgroundColor: item.color || color }] })
-            ),
-            h(Text, { style: styles.barValue }, fmt(item.value))
-          )
-        )
   );
 }
 
@@ -263,38 +232,6 @@ function ReportDocument({ week, previous }) {
   const pCollectionRate = pe ? pct(pe.violationsPaid, pe.violationsEncoded) : undefined;
   const pTowConversion = pe ? pct(pe.illegalParkersTowed, pe.violationsEncoded) : undefined;
 
-  const expenseItems = Object.entries(f.expenseByCategory)
-    .sort(([, a], [, b]) => b - a)
-    .map(([category, amount]) => ({ label: category, value: amount, color: COLORS.blue }));
-
-  const refundStatusItems = [
-    { label: 'Processed', value: f.refundsProcessedCount, color: COLORS.emerald },
-    { label: 'Pending', value: f.refundsPendingCount, color: COLORS.amber },
-  ].filter((i) => i.value > 0);
-
-  const dailyVolumeItems = Object.entries(cs.dailyVolume)
-    .sort(([a], [b]) => (a < b ? -1 : 1))
-    .map(([date, n]) => ({ label: shortDate(date), value: n, color: COLORS.blue }));
-
-  const channelItems = Object.entries(cs.channelDist).map(([source, n]) => ({ label: source, value: n, color: COLORS.violet }));
-  const topReasonsItems = cs.topReasons.slice(0, 10).map((r) => ({ label: r.reason, value: r.count, color: COLORS.blue }));
-  const outcomeItems = Object.entries(cs.outcomeCount).map(([o, n]) => ({ label: o, value: n, color: COLORS.emerald }));
-
-  const enforcementFunnelItems = [
-    { label: 'Encoded', value: e.violationsEncoded, color: COLORS.slate },
-    { label: 'Paid', value: e.violationsPaid, color: COLORS.emerald },
-    { label: 'Towed', value: e.illegalParkersTowed, color: COLORS.red },
-  ];
-
-  const byDay = {};
-  e.parkpliantLog.forEach((p) => {
-    const day = String(p.date || '').slice(0, 10);
-    if (day) byDay[day] = (byDay[day] || 0) + 1;
-  });
-  const violationsTrendItems = Object.entries(byDay)
-    .sort(([a], [b]) => (a < b ? -1 : 1))
-    .map(([day, n]) => ({ label: shortDate(day), value: n, color: COLORS.blue }));
-
   const towRows = e.towLog.slice(0, 15).map((t) => ({
     date: shortDate(t.date),
     plate: t.licensePlate || '',
@@ -373,8 +310,6 @@ function ReportDocument({ week, previous }) {
         h(KpiCard, { label: 'Refunds Pending', value: count(f.refundsPendingCount), sub: money(f.refundsPendingAmount), color: COLORS.amber, deltaInfo: delta(f.refundsPendingCount, pf?.refundsPendingCount, { higherIsBetter: false }) }),
         h(KpiCard, { label: 'Total Expenses', value: money(f.totalExpenses), sub: `${Object.keys(f.expenseByCategory).length} categories`, color: COLORS.slate, deltaInfo: delta(f.totalExpenses, pf?.totalExpenses, { higherIsBetter: false }) })
       ),
-      h(BarPanel, { title: 'Refund Status Breakdown', items: refundStatusItems }),
-      h(BarPanel, { title: 'Expense Breakdown', items: expenseItems, fmt: money }),
       h(Commentary, null,
         `Net remittance reached ${money(f.totalNetRemit)} this week. ${count(f.refundsProcessedCount)} refunds were processed ` +
         `(${money(f.refundsProcessedAmount)}) with ${count(f.refundsPendingCount)} still pending. Operating expenses totaled ${money(f.totalExpenses)}.`
@@ -419,10 +354,6 @@ function ReportDocument({ week, previous }) {
         h(KpiCard, { wide: true, label: 'Daily Average', value: count(cs.dailyAverage), sub: 'cases per day', color: COLORS.slate, deltaInfo: delta(cs.dailyAverage, pcs?.dailyAverage) }),
         h(KpiCard, { wide: true, label: 'Peak FRT', value: `${count(cs.peakFRT)} min`, sub: 'slowest single case', color: COLORS.amber, deltaInfo: delta(cs.peakFRT, pcs?.peakFRT, { higherIsBetter: false }) })
       ),
-      h(BarPanel, { title: 'Daily Case Volume', items: dailyVolumeItems }),
-      h(BarPanel, { title: 'Contact Channel Distribution', items: channelItems, color: COLORS.violet }),
-      h(BarPanel, { title: 'Top Contact Reasons', items: topReasonsItems }),
-      h(BarPanel, { title: 'Resolution Outcomes', items: outcomeItems, color: COLORS.emerald }),
       h(Commentary, { label: 'Service Performance Commentary' },
         `Customer service handled ${count(cs.totalCases)} interactions with a ${cs.resolutionRate.toFixed(1)}% resolution rate and an ` +
         `average first response of ${cs.avgFRT.toFixed(2)} minutes (${cs.instantPct.toFixed(1)}% answered instantly). Daily volume averaged ${count(cs.dailyAverage)} cases.`
@@ -438,8 +369,6 @@ function ReportDocument({ week, previous }) {
         h(KpiCard, { label: 'Tow Conversion Rate', value: `${towConversion}%`, sub: `${count(e.illegalParkersTowed)} towed of ${count(e.violationsEncoded)} encoded`, color: COLORS.amber, deltaInfo: delta(towConversion, pTowConversion, { isPoints: true, suffix: ' pts' }) }),
         h(KpiCard, { label: 'Paid on Parkpliant', value: count(e.violationsPaid), sub: `${collectionRate}% collection rate`, color: COLORS.amber, deltaInfo: delta(e.violationsPaid, pe?.violationsPaid) })
       ),
-      h(BarPanel, { title: 'Enforcement Funnel', items: enforcementFunnelItems }),
-      h(BarPanel, { title: 'Violations Trend (by day encoded)', items: violationsTrendItems }),
       h(
         View,
         { style: styles.panel },
