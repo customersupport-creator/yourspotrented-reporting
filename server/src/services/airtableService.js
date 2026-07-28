@@ -169,7 +169,17 @@ export async function getWeekData(weekStart, weekEnd) {
     towingCompany: r['TOWING COMPANY'],
   }));
 
-  const parkpliantLog = parkpliantRows.map((r) => ({
+  // The visible "Parkpliant Records" list needs to include every violation
+  // that's relevant to this week — either encoded this week OR settled
+  // (paid) this week — otherwise a violation encoded last week but paid this
+  // week would count toward the "Paid on Parkpliant" KPI (via
+  // settledParkpliant above) without ever showing up as a Paid row in the
+  // list itself. Union the two sets, deduped by Airtable record ID.
+  const parkpliantById = new Map();
+  parkpliant.forEach((r) => parkpliantById.set(r.id, r.fields));
+  settledParkpliant.forEach((r) => parkpliantById.set(r.id, r.fields));
+
+  const parkpliantLog = Array.from(parkpliantById.values()).map((r) => ({
     noticeNumber: r['Violation Notice number'],
     // Paid violations show the date they actually settled; everything else
     // (still Encoded, or Voided) shows the date it was originally encoded.
@@ -252,7 +262,7 @@ export async function getWeekData(weekStart, weekEnd) {
         amount: r.AMOUNT,
         status: r.STATUS,
         category: r.CATEGORY,
-        reason: r['DETAILED REASON'] || r['REASON CATEGORY'] || '',
+        reason: r['REASON CATEGORY'] || r['DETAILED REASON'] || '',
       })),
     },
     enforcement: {
