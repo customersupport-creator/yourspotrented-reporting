@@ -110,11 +110,19 @@ export async function getWeekData(weekStart, weekEnd) {
   // "COMPLETED", "CANCELLED") — matching title-case 'Paid' here always failed,
   // which is why "Refunds Processed" always showed 0 despite paid rows
   // existing in the data.
+  //
+  // CATEGORY has four legitimate values — REFUND, REFUND+REWARD, REWARD,
+  // REIMBURSEMENT — plus a handful of junk options (STATUS, PENDING,
+  // COMPLETED, CANCELLED, PROCESSED BY:, MAX, Max, max) that look like
+  // accidental duplicates copied in from another field. Only REFUND and
+  // REFUND+REWARD were being counted before, so plain REWARD and
+  // REIMBURSEMENT rows were silently dropped from both totals.
+  const REFUND_CATEGORIES = new Set(['REFUND', 'REFUND+REWARD', 'REWARD', 'REIMBURSEMENT']);
   const refundsProcessed = refundRows.filter(
-    (r) => r.STATUS === 'PAID' && (r.CATEGORY === 'REFUND' || r.CATEGORY === 'REFUND+REWARD')
+    (r) => r.STATUS === 'PAID' && REFUND_CATEGORIES.has(r.CATEGORY)
   );
   const refundsPending = refundRows.filter(
-    (r) => r.STATUS !== 'PAID' && (r.CATEGORY === 'REFUND' || r.CATEGORY === 'REFUND+REWARD')
+    (r) => r.STATUS !== 'PAID' && REFUND_CATEGORIES.has(r.CATEGORY)
   );
 
   const totalRefundsProcessed = refundsProcessed.reduce((s, r) => s + (r.AMOUNT || 0), 0);
