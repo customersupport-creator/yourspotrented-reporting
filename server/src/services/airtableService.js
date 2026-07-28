@@ -48,8 +48,17 @@ async function fetchRecords(baseId, tableId, filterFormula) {
   return records;
 }
 
+// Inclusive on both ends — same day + after start, same day + before end.
+// Previously used a strict AND(IS_AFTER(start), IS_BEFORE(end)), which
+// silently excluded the entire last day of every week (and technically the
+// first day too) from every table this is used on: refunds, expenses, towed
+// vehicles, Parkpliant, and customer service. Confirmed against real data —
+// dropping July 26 alone was missing 3 refund rows worth $168.23.
 function dateFilter(startDate, endDate, fieldName = 'DATE') {
-  return `AND(IS_AFTER({${fieldName}}, '${startDate}'), IS_BEFORE({${fieldName}}, '${endDate}'))`;
+  return `AND(
+    OR(IS_SAME({${fieldName}}, '${startDate}', 'day'), IS_AFTER({${fieldName}}, '${startDate}')),
+    OR(IS_SAME({${fieldName}}, '${endDate}', 'day'), IS_BEFORE({${fieldName}}, '${endDate}'))
+  )`;
 }
 
 // Inclusive Start Date >= weekStart AND End Date <= weekEnd, matched by day
